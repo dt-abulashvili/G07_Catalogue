@@ -28,47 +28,24 @@ internal class DatabaseWriter : IDataWriter<Category>
 
                 if (categoryId == null)
                 {
-                    using SqlCommand insertCmd = new SqlCommand("InsertCategory", connection);
-                    insertCmd.CommandType = CommandType.StoredProcedure;
-                    insertCmd.Parameters.AddWithValue("@CategoryName", category.Name);
-                    insertCmd.Parameters.AddWithValue("@IsActive", category.IsActive);
-                    insertCmd.ExecuteNonQuery();
-
-                    categoryId = GetCategoryIdByName(category.Name, connection);
+                    categoryId = InsertCategory(category, connection);
                 }
                 else
                 {
-                    using SqlCommand updateCmd = new SqlCommand("UpdateCategory", connection);
-                    updateCmd.CommandType = CommandType.StoredProcedure;
-                    updateCmd.Parameters.AddWithValue("@CategoryID", categoryId);
-                    updateCmd.Parameters.AddWithValue("@IsActive", category.IsActive);
-                    updateCmd.ExecuteNonQuery();
+                    UpdateCategory(categoryId.Value, category, connection);
                 }
 
-                foreach (var product in category.Products)
+                foreach (var product in category.Products.Values)
                 {
                     int? productId = GetProductIdByName(product.Code, connection);
 
                     if (productId == null)
                     {
-                        using SqlCommand insertCmd = new SqlCommand("InsertProduct", connection);
-                        insertCmd.CommandType = CommandType.StoredProcedure;
-                        insertCmd.Parameters.AddWithValue("@ProductName", product.Name);
-                        insertCmd.Parameters.AddWithValue("@ProductCode", product.Code);
-                        insertCmd.Parameters.AddWithValue("@Price", product.Price);
-                        insertCmd.Parameters.AddWithValue("@IsActive", product.IsActive);
-                        insertCmd.Parameters.AddWithValue("@CategoryID", categoryId);
-                        insertCmd.ExecuteNonQuery();
+                        InsertProduct(product, categoryId.Value, connection);
                     }
                     else
                     {
-                        using SqlCommand updateCmd = new SqlCommand("UpdateProduct", connection);
-                        updateCmd.CommandType = CommandType.StoredProcedure;
-                        updateCmd.Parameters.AddWithValue("@ProductName", product.Name);
-                        updateCmd.Parameters.AddWithValue("@ProductCode", product.Code);
-                        updateCmd.Parameters.AddWithValue("@Price", product.Price);
-                        updateCmd.Parameters.AddWithValue("@IsActive", product.IsActive);
-                        updateCmd.ExecuteNonQuery();
+                        UpdateProduct(product, connection);
                     }
                 }
             }
@@ -94,4 +71,48 @@ internal class DatabaseWriter : IDataWriter<Category>
 
         return result != null ? Convert.ToInt32(result) : null;
     }
+
+    private int InsertCategory(Category category, SqlConnection connection)
+    {
+        using SqlCommand cmd = new SqlCommand("InsertCategory", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddWithValue("@CategoryName", category.Name);
+        cmd.Parameters.AddWithValue("@IsActive", category.IsActive);
+        cmd.ExecuteNonQuery();
+
+        return GetCategoryIdByName(category.Name, connection) ?? throw new Exception("Failed to retrieve inserted category ID.");
+    }
+
+    private void UpdateCategory(int categoryId, Category category, SqlConnection connection)
+    {
+        using SqlCommand cmd = new SqlCommand("UpdateCategory", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddWithValue("@CategoryID", categoryId);
+        cmd.Parameters.AddWithValue("@IsActive", category.IsActive);
+        cmd.ExecuteNonQuery();
+    }
+
+    private void InsertProduct(Product product, int categoryId, SqlConnection connection)
+    {
+        using SqlCommand cmd = new SqlCommand("InsertProduct", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddWithValue("@CategoryID", categoryId);
+        cmd.Parameters.AddWithValue("@ProductCode", product.Code);
+        cmd.Parameters.AddWithValue("@ProductName", product.Name);
+        cmd.Parameters.AddWithValue("@Price", product.Price);
+        cmd.Parameters.AddWithValue("@IsActive", product.IsActive);
+        cmd.ExecuteNonQuery();
+    }
+
+    private void UpdateProduct(Product product, SqlConnection connection)
+    {
+        using SqlCommand cmd = new SqlCommand("UpdateProduct", connection);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddWithValue("@ProductCode", product.Code);
+        cmd.Parameters.AddWithValue("@ProductName", product.Name);
+        cmd.Parameters.AddWithValue("@Price", product.Price);
+        cmd.Parameters.AddWithValue("@IsActive", product.IsActive);
+        cmd.ExecuteNonQuery();
+    }
+
 }
