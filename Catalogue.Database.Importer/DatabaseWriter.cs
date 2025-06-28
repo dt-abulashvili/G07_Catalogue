@@ -30,7 +30,7 @@ internal class DatabaseWriter : IDataWriter<Category>
                 {
                     categoryId = InsertCategory(category, connection);
                 }
-                else
+                else if (IsCategoryChanged(categoryId.Value, category, connection))
                 {
                     UpdateCategory(categoryId.Value, category, connection);
                 }
@@ -43,7 +43,7 @@ internal class DatabaseWriter : IDataWriter<Category>
                     {
                         InsertProduct(product, categoryId.Value, connection);
                     }
-                    else
+                    else if (IsProductChanged(product.Code, product, connection))
                     {
                         UpdateProduct(product, connection);
                     }
@@ -115,4 +115,38 @@ internal class DatabaseWriter : IDataWriter<Category>
         cmd.ExecuteNonQuery();
     }
 
+    private bool IsCategoryChanged(int categoryId, Category category, SqlConnection connection)
+    {
+        using SqlCommand command = new SqlCommand(
+            "select IsActive from Categories where CategoryID = @ID", connection);
+        command.Parameters.AddWithValue("@ID", categoryId);
+
+        using SqlDataReader reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            bool dbIsActive = reader.GetBoolean(0);
+            return dbIsActive != category.IsActive;
+        }
+
+        return true; //issue here
+    }
+
+    private bool IsProductChanged(string productCode, Product product, SqlConnection connection)
+    {
+        using SqlCommand command = new SqlCommand(
+            "select ProductName, Price, IsActive from Products where ProductCode = @Code", connection);
+        command.Parameters.AddWithValue("@Code", productCode);
+
+        using SqlDataReader reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            string dbName = reader.GetString(0);
+            decimal dbPrice = reader.GetDecimal(1);
+            bool dbIsActive = reader.GetBoolean(2);
+
+            return dbName != product.Name || dbPrice != product.Price || dbIsActive != product.IsActive;
+        }
+
+        return true; //issue here
+    }
 }
