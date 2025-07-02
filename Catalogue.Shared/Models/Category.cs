@@ -4,7 +4,7 @@
     {
         public string Name { get; set; } = null!;
         public bool IsActive { get; set; }
-        public Dictionary<string, Product> Products { get; set; } = new Dictionary<string, Product>();
+        public IDictionary<string, Product> Products { get; set; } = new Dictionary<string, Product>();
 
         public override int GetHashCode()
         {
