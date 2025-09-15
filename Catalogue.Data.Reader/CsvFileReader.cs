@@ -1,6 +1,5 @@
 ﻿using Catalogue.Shared.Interfaces;
 using Catalogue.Shared.Models;
-using System.IO;
 
 namespace Catalogue.Data.Reader;
 
@@ -8,7 +7,7 @@ internal sealed class CsvFileReader : IDataReader<Category>
 {
     private readonly string _filePath;
 
-    public CsvFileReader(string filePath)
+    internal CsvFileReader(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
         if (!File.Exists(filePath)) throw new FileNotFoundException($"The file '{filePath}' does not exist.", filePath);
@@ -56,10 +55,10 @@ internal sealed class CsvFileReader : IDataReader<Category>
         return new Category
         {
             Name = tokens[0],
-            IsActive = ParseIsActive(tokens[1]),
-            Products = new Dictionary<string, Product>()
+            IsActive = GetBool(tokens[1])
         };
     }
+
     private static Product CreateProductFromTokens(string[] tokens)
     {
         return new Product
@@ -67,20 +66,22 @@ internal sealed class CsvFileReader : IDataReader<Category>
             Name = tokens[2],
             Code = tokens[3],
             Price = decimal.Parse(tokens[4]),
-            IsActive = ParseIsActive(tokens[5])
+            IsActive = GetBool(tokens[5])
         };
     }
+
     private static void UpdateCategoryIfChanged(Category category, string[] tokens)
     {
-        bool newIsActive = ParseIsActive(tokens[1]);
+        bool newIsActive = GetBool(tokens[1]);
         if (category.IsActive != newIsActive)
             category.IsActive = newIsActive;
     }
+    
     private static void UpdateProductIfChanged(Product product, string[] tokens)
     {
         string newName = tokens[2];
         decimal newPrice = decimal.Parse(tokens[4]);
-        bool newIsActive = ParseIsActive(tokens[5]);
+        bool newIsActive = GetBool(tokens[5]);
 
         if (product.Name != newName)
             product.Name = newName;
@@ -91,10 +92,14 @@ internal sealed class CsvFileReader : IDataReader<Category>
         if (product.IsActive != newIsActive)
             product.IsActive = newIsActive;
     }
-    private static bool ParseIsActive(string value)
+
+    private static bool GetBool(string value)
     {
-        return value == "1" ? true :
-               value == "0" ? false :
-               throw new Exception("Invalid input");
+        switch (value)
+        {
+            case "1": return true;
+            case "0": return false;
+            default: throw new Exception("Invalid input");
+        }
     }
 }
