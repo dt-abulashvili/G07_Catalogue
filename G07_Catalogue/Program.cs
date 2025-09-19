@@ -14,7 +14,7 @@ namespace G07_Catalogue
                 //: "Server=localhost;Database=Catalogue;User Id=sa;Password=your_password;";
 
             Console.WriteLine("Starting Catalogue Importer...");
-            Console.Write("Enter the path to the CSV file: ");
+            //Console.Write("Enter the path to the CSV file: ");
             //string filePath = Console.ReadLine()!;
             string filePath = @"C:\Users\Beqa\OneDrive\Desktop\Products.csv";
             string connectionString = "Data Source=LAPTOP-4OJRG3M6\\SQLSERVER;Initial Catalog=G07_Catalogue;Integrated Security=True;TrustServerCertificate=True";
