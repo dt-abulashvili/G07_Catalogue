@@ -2,7 +2,6 @@
 using Catalogue.Shared.Models;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Transactions;
 
 namespace Catalogue.Database.Importer;
 
@@ -10,9 +9,9 @@ internal class DatabaseWriter : IDataWriter<Category>
 {
     private readonly string _connectionString;
 
-    public DatabaseWriter(string connectionString)
+    internal DatabaseWriter(string connectionString)
     {
-        _connectionString = connectionString;
+        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
     }
 
     public void WriteData(IEnumerable<Category> data)
@@ -39,7 +38,7 @@ internal class DatabaseWriter : IDataWriter<Category>
         }
     }
 
-    private void UpdateCategoryAndProducts(Category category, SqlConnection connection, SqlTransaction transaction)
+    private static void UpdateCategoryAndProducts(Category category, SqlConnection connection, SqlTransaction transaction)
     {
         foreach (var product in category.Products.Values)
         {
