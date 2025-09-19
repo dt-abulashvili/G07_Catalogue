@@ -93,8 +93,14 @@ internal sealed class CsvFileReader : IDataReader<Category>
     }
     private static bool ParseIsActive(string value)
     {
-        return value == "1" ? true :
-               value == "0" ? false :
-               throw new Exception("Invalid input");
+        switch(value)
+        {
+            case "1":
+                return true;
+            case "0":
+                return false;
+            default:
+                throw new FormatException($"Invalid boolean value: '{value}'");
+        }    
     }
 }
