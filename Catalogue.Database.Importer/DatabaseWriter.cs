@@ -18,15 +18,17 @@ internal class DatabaseWriter : IDataWriter<Category>
     {
         ArgumentNullException.ThrowIfNull(data);
 
-        using SqlConnection connection = new SqlConnection(_connectionString);
+        using var connection = new SqlConnection(_connectionString);
         connection.Open();
+        using var transaction = connection.BeginTransaction();
+        using var command = GetCommand(connection, transaction);
 
-        using SqlTransaction transaction = connection.BeginTransaction();
         try
         {
             foreach (var category in data)
             {
-                UpdateCategoryAndProducts(category, connection, transaction);
+                AssignParametersToCommand(command, category);
+                command.ExecuteNonQuery();
             }
 
             transaction.Commit();
@@ -38,21 +40,30 @@ internal class DatabaseWriter : IDataWriter<Category>
         }
     }
 
-    private static void UpdateCategoryAndProducts(Category category, SqlConnection connection, SqlTransaction transaction)
+    private static SqlCommand GetCommand(SqlConnection connection, SqlTransaction transaction)
+    {
+        var command = new SqlCommand("ImportProductData_SP", connection);
+        command.Transaction = transaction;
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.Add("@CategoryName", SqlDbType.NVarChar);
+        command.Parameters.Add("@CategoryIsActive", SqlDbType.Bit);
+        command.Parameters.Add("@ProductName", SqlDbType.NVarChar);
+        command.Parameters.Add("@ProductCode", SqlDbType.NVarChar);
+        command.Parameters.Add("@ProductPrice", SqlDbType.Decimal);
+        command.Parameters.Add("@ProductIsActive", SqlDbType.Bit);
+        return command;
+    }
+
+    private static void AssignParametersToCommand(SqlCommand command, Category category)
     {
         foreach (var product in category.Products.Values)
         {
-            using SqlCommand command = new SqlCommand("ImportProductData_SP", connection, transaction);
-            command.CommandType = CommandType.StoredProcedure;
-
-            command.Parameters.AddWithValue("@CategoryName", category.Name);
-            command.Parameters.AddWithValue("@CategoryIsActive", category.IsActive);
-            command.Parameters.AddWithValue("@ProductName", product.Name);
-            command.Parameters.AddWithValue("@ProductCode", product.Code);
-            command.Parameters.AddWithValue("@ProductPrice", product.Price);
-            command.Parameters.AddWithValue("@ProductIsActive", product.IsActive);
-
-            command.ExecuteNonQuery();
+            command.Parameters["@CategoryName"].Value = category.Name;
+            command.Parameters["@CategoryIsActive"].Value = category.IsActive;
+            command.Parameters["@ProductName"].Value = product.Name;
+            command.Parameters["@ProductCode"].Value = product.Code;
+            command.Parameters["@ProductPrice"].Value = product.Price;
+            command.Parameters["@ProductIsActive"].Value = product.IsActive;
         }
-    }  
+    }
 }
