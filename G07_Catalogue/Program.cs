@@ -9,28 +9,35 @@ namespace G07_Catalogue
     {
         static void Main(string[] args)
         {
-            //string connectionString = args.Length > 0
-                //? args[0]
-                //: "Server=localhost;Database=Catalogue;User Id=sa;Password=your_password;";
+            string filePath = @"C:\Users\Beqa\OneDrive\Desktop\csv.txt";
+            string connectionString = "Data Source=LAPTOP-4OJRG3M6\\SQLSERVER;Initial Catalog=Northwind;Integrated Security=True;TrustServerCertificate=True";
 
-            Console.WriteLine("Starting Catalogue Importer...");
-            //Console.Write("Enter the path to the CSV file: ");
-            //string filePath = Console.ReadLine()!;
-            string filePath = @"D:\Users\david\OneDrive\Documents\My Files\STUDENTS\New folder (2)\Products.csv";
-            string connectionString = "Data Source=.;Initial Catalog=G07_Catalog;Integrated Security=True;TrustServerCertificate=True";
+            //IDataReader<Category> reader = CsvFileReaderFactory.Create(filePath);
+            //IDataWriter<Category> writer = DatabaseWriterFactory.Create(connectionString);
 
-            IDataReader<Category> reader = CsvFileReaderFactory.Create(filePath);
-            IDataWriter<Category> writer = DatabaseWriterFactory.Create(connectionString);
-           
+            //try
+            //{
+            //    IEnumerable<Category> categories = reader.GetData();
+            //    writer.WriteData(categories);
+            //    Console.WriteLine("Data import completed successfully.");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine($"An error occurred during the import: {ex.Message}");
+            //}
+
+            IDataReader<Category> reader = DatabaseReaderFactory.Create(connectionString);
+            IDataWriter<Category> writer = CsvFileWriterFactory.Create(filePath);
+
             try
             {
                 IEnumerable<Category> categories = reader.GetData();
                 writer.WriteData(categories);
-                Console.WriteLine("Data import completed successfully.");
+                Console.WriteLine("Data export completed successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred during the import: {ex.Message}");
+                Console.WriteLine($"An error occurred during the export: {ex.Message}");
             }
         }
     }
