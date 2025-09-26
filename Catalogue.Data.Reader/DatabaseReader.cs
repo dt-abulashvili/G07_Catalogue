@@ -46,7 +46,7 @@ internal sealed class DatabaseReader : IDataReader<Category>
         return new Category
         {
             Name = reader.GetString(0),
-            IsActive = GetBool(reader.GetInt32(1))
+            IsActive = reader.GetBoolean(1)
         };
     }
 
@@ -57,7 +57,7 @@ internal sealed class DatabaseReader : IDataReader<Category>
             Name = reader.GetString(2),
             Code = reader.GetString(3),
             Price = reader.GetDecimal(4),
-            IsActive = GetBool(reader.GetInt32(5))
+            IsActive = reader.GetBoolean(5)
         };
     }
 
